@@ -74,10 +74,10 @@ class FixedWeightBacktester:
     def __init__(self,
                  portfolio: dict[str, float],
                  prices: pd.DataFrame,
-                 market_corrections: pd.DataFrame,
                  date_start: datetime.date,
                  date_end: datetime.date,
-                 frequency_rebalance: str):
+                 frequency_rebalance: str,
+                 market_corrections: pd.DataFrame = None):
         """
         portfolio: dict[str, float]
             Defines the assets and weights in the portfolio.
@@ -103,10 +103,13 @@ class FixedWeightBacktester:
 
         self.portfolio = portfolio
         self.prices = prices
-        self.market_corrections = (
-            market_corrections
-            .query("@date_start <= start & end <= @date_end").copy()
-        )
+        if market_corrections is not None:
+            self.market_corrections = (
+                market_corrections
+                .query("@date_start <= start & end <= @date_end").copy()
+            )
+        else:
+            self.market_corrections = market_corrections
 
         self.date_start = date_start
         self.date_end = date_end

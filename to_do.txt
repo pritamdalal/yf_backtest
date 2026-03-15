@@ -1,0 +1,27 @@
+1. Go over code with Matt B and discuss disucss overall design.
+    - should I include a virtual-environment
+    - workflows for doing data analysis in VSCode
+
+2. Implement Chris Bartak analysis as a Class.
+
+3. Add a benchmark to the FixedWeightBacktester.
+    - information ratio
+    - upcapture/downcapture
+
+4. Add a never rebalance options to the FixedWeightBacktester.
+
+5. Add export to Excel class or function that takes in a calculated
+backtester and then outputs it to Excel.
+
+6. Learn how to structure your project so not everything has to be in
+a single directory.
+
+7. Organize tests better once you get a lot of them.
+
+8. Don't start market corrections at the start of the first full correction.
+Start it at the beginning of the backtest period.
+
+9. Need to develop a good workflow for data analysis object oriented programming
+in VScode and Jupyter Notbooks (either in VSCode or in Jupyter Lab).
+
+

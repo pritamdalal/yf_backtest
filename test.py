@@ -3,11 +3,12 @@ import numpy as np
 import pandas as pd
 import datetime
 from FixedWieightBacktester import FixedWeightBacktester
-from MarketCorrections import MarketCorrections
+# from MarketCorrections import MarketCorrections
 
 
 @pytest.fixture
 def price_test_data() -> pd.DataFrame:
+    # importing data from static excel file so the numbers match.
     df_spy = pd.read_excel("data/bufr_bufd_mquslblr.xlsx", "spy")
     df_agg = pd.read_excel("data/bufr_bufd_mquslblr.xlsx", "agg")
     df_hyg = pd.read_excel("data/bufr_bufd_mquslblr.xlsx", "hyg")
@@ -36,7 +37,7 @@ def price_test_data() -> pd.DataFrame:
         "data/bufr_bufd_mquslblr.xlsx",
         "sv_equity_buffer_growth"
     )
-
+    # merging together price DataFrames
     df_px = (
         df_buffer_100
         .merge(df_buffer_010, how="left", on="date")
@@ -52,6 +53,7 @@ def price_test_data() -> pd.DataFrame:
         .merge(df_sv_equity_buffer, how="left", on="date")
         .merge(df_sv_equity_buffer_growth, how="left", on="date")
     )
+    # minor modifications to price DataFrame
     cols_to_change = {
         "mqu1pplr": "buffer_100",
         "mquslblr": "buffer_020",
@@ -65,17 +67,16 @@ def price_test_data() -> pd.DataFrame:
     )
     return df_px
 
-
-@pytest.fixture
-def corrections_test_data() -> pd.DataFrame:
-    mc = MarketCorrections(asset="SPY", correction=-0.05)
-    return mc.corrections
+# currently not testing the market corrections feature so not makingt
+# this a fixture.
+# @pytest.fixture
+# def corrections_test_data() -> pd.DataFrame:
+#     mc = MarketCorrections(asset="SPY", correction=-0.05)
+#     return mc.corrections
 
 
 class TesterFixedWeightBacktester:
-    def test_spy50_hyg50_daily(self,
-                               price_test_data,
-                               corrections_test_data):
+    def test_spy50_hyg50_daily(self, price_test_data):
         portfolio = {
             "spy": 0.5,
             "hyg": 0.5
@@ -85,13 +86,12 @@ class TesterFixedWeightBacktester:
         drb = FixedWeightBacktester(
             portfolio,
             price_test_data,
-            corrections_test_data,
             date_start,
             date_end,
             "daily")
         drb.calc_daily_returns()
         drb.calc_portfolio_statistics()
-        drb.calc_period_drawdowns()
+        # drb.calc_period_drawdowns()
 
         accuracy = 7
         # cumulative return
@@ -110,9 +110,7 @@ class TesterFixedWeightBacktester:
         assert np.round(drb.drawdown_max["portfolio"], accuracy) == \
             np.round(-0.441957538955252, accuracy)
 
-    def test_balanced_1_monthly(self,
-                                price_test_data,
-                                corrections_test_data):
+    def test_balanced_1_monthly(self, price_test_data):
         portfolio = {
             "spy": 0.45,
             "agg": 0.1,
@@ -126,13 +124,12 @@ class TesterFixedWeightBacktester:
         drb = FixedWeightBacktester(
             portfolio,
             price_test_data,
-            corrections_test_data,
             date_start,
             date_end,
             "monthly")
         drb.calc_daily_returns()
         drb.calc_portfolio_statistics()
-        drb.calc_period_drawdowns()
+        # drb.calc_period_drawdowns()
 
         accuracy = 7
         # cumulative return
@@ -150,3 +147,40 @@ class TesterFixedWeightBacktester:
         # maximum drawdown
         assert np.round(drb.drawdown_max["portfolio"], accuracy) == \
             np.round(-0.317950340976042, accuracy)
+
+    def test_growth_model_4_quarterly(self, price_test_data):
+        portfolio = {
+            "spy": 0.7,
+            "tlt": 0.15,
+            "gld": 0.05,
+            "buffer_020": 0.05,
+            "buffer_100": 0.05,
+        }
+        date_start = datetime.date(2020, 12, 31)
+        date_end = datetime.date(2024, 12, 31)
+        drb = FixedWeightBacktester(
+            portfolio,
+            price_test_data,
+            date_start,
+            date_end,
+            "quarterly")
+        drb.calc_daily_returns()
+        drb.calc_portfolio_statistics()
+        # drb.calc_period_drawdowns()
+
+        accuracy = 7
+        # cumulative return
+        assert np.round(drb.cumulative_return["portfolio"], accuracy) == \
+            np.round(0.396966691564179, accuracy)
+        # annualized return
+        assert np.round(drb.annual_return["portfolio"], accuracy) == \
+            np.round(0.0874388900207699, accuracy)
+        # volatility
+        assert np.round(drb.volatility["portfolio"], accuracy) == \
+            np.round(0.125106555535225, accuracy)
+        # sharpe
+        assert np.round(drb.sharpe_ratio["portfolio"], accuracy) == \
+            np.round(0.732673101132687, accuracy)
+        # maximum drawdown
+        assert np.round(drb.drawdown_max["portfolio"], accuracy) == \
+            np.round(-0.228886156467139, accuracy)
